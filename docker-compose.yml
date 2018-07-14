@@ -1,0 +1,28 @@
+version: "3"
+services:
+  python:
+    build: ./crawler
+    command: bash -c "cd jpy_currency && python routine.py"
+    volumes:
+      - ./crawler:/app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - mongo
+    links:
+      - mongo
+  nodejs:
+    build: ./restful
+    # command: nodemon server.js
+    volumes:
+      - ./restful:/app
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    ports:
+      - "8080:8080"
+  mongo:
+    image: mongo:3.0.2
+    volumes:
+      - './data:/data/db'

@@ -1,0 +1,24 @@
+.axis--x path {
+    display: none;
+}
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+.graph-div {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+#tooltip{
+    position: absolute;
+    background: #fff;
+    width: 150px;
+    height: auto;
+    padding: 0px 10px;
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+}
+#tooltip.hidden{
+    display: none;
+}
