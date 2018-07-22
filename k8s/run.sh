@@ -27,9 +27,14 @@ docker push victortsaitw12/d3-practice-crawler
 kubectl apply -f crawler_deployment.yaml
 kubectl apply -f crawler_service.yaml
 
+
+
 kubectl get pvc
 kubectl get pods
 kubectl exec -it mongo-bc979b666-8nvht -- bash
+kubectl get storageclass
+kubectl get pv
+kubectl get pvc
 
 mongo:27017
 web-development:8080

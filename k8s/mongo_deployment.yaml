@@ -12,7 +12,7 @@ spec:
       containers:
       - name: mongo
         #image: clutteredcode/mongo-alpine:latest
-        image: mongo:3.6
+        image: mongo:3.0.2
         imagePullPolicy: Always
         ports:
         - containerPort: 27017
@@ -22,4 +22,4 @@ spec:
       volumes:
         - name: mongodata
           persistentVolumeClaim:
-            claimName: mongo-data
+            claimName: mongo-local-pvc
