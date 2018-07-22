@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: restful-deployment
+spec:
+  replicas: 2
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: restful-deployment
+    spec:
+      containers:
+      - image: victortsaitw12/d3-practice-restful
+        imagePullPolicy: Always
+        name: d3-practice-restful
+        ports:
+          - containerPort: 8081
+        env:
+          - name: AUTH_URL
+            value: "auth-service:9000"

@@ -1,6 +1,8 @@
 version: "3"
 services:
-  python:
+
+  crawler:
+    container_name: crawler
     build: ./crawler
     command: bash -c "cd jpy_currency && python routine.py"
     volumes:
@@ -11,7 +13,9 @@ services:
       - mongo
     links:
       - mongo
-  nodejs:
+
+  restful:
+    container_name: restful
     build: ./restful
     # command: nodemon server.js
     volumes:
@@ -22,6 +26,28 @@ services:
       - mongo
     ports:
       - "8080:8080"
+
+  auth:
+    container_name: auth
+    build: ./auth
+    volumes:
+      - ./auth:/app
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    ports:
+      - "9000:9000"
+
+  web:
+    container_name: web
+    build: ./web
+    volumes:
+      - ./web:/app
+    links:
+      - mongo
+    ports:
+      - "8081:8081"
   mongo:
     image: mongo:3.0.2
     volumes:

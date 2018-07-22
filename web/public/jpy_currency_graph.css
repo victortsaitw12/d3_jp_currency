@@ -1,0 +1,51 @@
+.axis--x path {
+    display: none;
+}
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+.graph-div {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+#tooltip{
+    position: absolute;
+    background: #fff;
+    width: 150px;
+    height: auto;
+    padding: 0px 10px;
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+}
+#tooltip.hidden{
+    display: none;
+}
+#userName{
+    color: #999;
+}
+#userPhoto{
+    z-index: 0;
+    height:40px;
+    width: 40px;
+    background-color: #999;
+    border-radius: 25px;
+}
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100; /* Behind the navbar */
+  padding: 48px 0 0; /* Height of navbar */
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+.sidebar-sticky {
+  position: relative;
+  top: 0;
+  height: calc(100vh - 48px);
+  padding-top: 1rem;
+  overflow-x: hidden;
+  overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}

@@ -6,4 +6,4 @@ RUN npm install
 RUN npm install -g nodemon
 RUN npm install -g express
 RUN npm install -g mongodb 
-CMD ["nodemon", "server.js"]
+CMD ["nodemon", "index.js"]

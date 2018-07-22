@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Node Authentication</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"> <!-- load bootstrap css -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+      body { padding-top:80px; }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <script>
+    function checkFBLoginState() {
+      FB.login(function(response) {
+        console.log(response);
+        if (response.status === 'connected') {
+          $.ajax({
+            type: 'GET',
+            url: 'http://localhost:9000/auth/facebook/token',
+            data: 'access_token=' + response.authResponse.accessToken,
+          }).done(response => {
+            console.log(response);
+            window.location.href = 'http://localhost:8080/dashbord?user=' +
+              JSON.stringify(response);
+          });
+        } 
+      });
+    }
+    window.fbAsyncInit = function() {
+      $.ajax({
+        type: 'GET',
+        url: 'http://localhost:9000/appID',
+      }).done(response => {
+        console.log(response);
+        FB.init({
+          appId      : response.app_id,
+          cookie     : true,  // enable cookies to allow the server to access
+                              // the session
+          xfbml      : true,  // parse social plugins on this page
+          version    : 'v2.8' // use graph api version 2.8
+        });
+      });
+    };
+   // Load the SDK asynchronously
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    </script>
+    <div class="container">
+      <div class="jumbotron text-center">
+        <h1><span class="fa fa-sign-in"></span> Authentication</h1>
+        <p>Login or Register with:</p>
+        <a class="btn btn-primary" onClick="return checkFBLoginState();"><span class="fa fa-facebook"></span> Facebook</a>
+      </div>
+    </div>
+  </body>
+</html>

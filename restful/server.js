@@ -1,31 +1,71 @@
 const express = require('express');
+const http = require('http');
 const app = express()
-const mongo = require('./mongo');
-var path = require('path');
-let db = undefined;
+const path = require('path');
 
-app.use(express.static('public'));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname + '/index.html'));
-});
-
-app.get('/jpy_currency', (req, res) => {
-  if(!db){ 
-    return res.send('db is undefined');
-  }
-  db.find({}, {projection: {_id: 0}}).sort({updated_time:1}).toArray((err, data) => {
-    console.log(data);
-    return res.json(data);  
+function fetchData(db){
+  return Promise.resolve().then(() => {
+    return new Promise((resolve, reject) => {
+    db.find({}, { projection: { _id: 0 } })
+      .sort({ updated_time: -1 })
+      .toArray((err, data) => {
+        if(err){
+          return reject(err);
+        }
+        resolve(data);  
+      });
+    });
+  }).then(data => {
+    return data.map((currency) => {
+      currency.updated_time = currency.updated_time.setMilliseconds(0);
+      currency.updated_time = new Date(currency.updated_time);
+      return currency;
+    });
+  }).catch(err => {
+    console.log(err.stack);  
+    return [];
   });
-});
+}
 
-mongo.init().then(function(db_collection){
-  db = db_collection;
-}).then(function(){
-  app.listen(8080, () => {
-    console.log('Restful run on 8080');  
+function start(db){
+  app.all('/*', function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    next();
   });
-}).catch(function(error){
-  console.log(error.message);  
-});
+
+  app.get('/jpy_currency', (req, res) => {
+    http.get(
+      'http://' + process.env.AUTH_URL + '/validateJWT?token=' + req.query.token
+    ,auth_res => {
+      auth_res.setEncoding('utf8');
+      let rawData = '';
+      auth_res.on('data', (chunk) => { rawData += chunk; });
+      auth_res.on('end', () => {
+        return Promise.resolve().then(() =>{
+          return JSON.parse(rawData);
+        }).then(data => {
+          if(!db) reject('db is undefined');  
+          return data;
+        }).then(data => {
+           return fetchData(db);
+        }).then(data => {
+          return res.json(data);
+        }).catch(err => {
+          console.log(err.stack);  
+          return res.json({});
+        });
+      });
+      auth_res.on('error', err => {
+        console.log(err.stack);  
+        return res.json({});
+      });
+    });
+  });
+
+  app.listen(8081, () => {
+    console.log('Restful run on 8081');  
+  });
+}
+
+module.exports = {start, fetchData};
