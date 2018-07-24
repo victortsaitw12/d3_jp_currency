@@ -11,7 +11,7 @@ function makeJWT(user_id){
   return jwt.sign({
     user_id: user_id
   }, config.jwt.key, {
-    expiresIn: 60  
+    expiresIn: 3600  
   });
 }
 

@@ -23,8 +23,8 @@ spec:
           - containerPort: 9000
         env:
           - name: APP_ID
-            value: ""
+            value: "843930439103568"
           - name: APP_SECRET
-            value: ""
+            value: "f6f3dd2a33f28dc3b493be80d7083b04"
           - name: JWT_SECRET
-            value: ""
+            value: "jwtsecretkey"
