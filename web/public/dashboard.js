@@ -31,24 +31,112 @@ function translateDataForTable(data){
   }, Object.keys(data2));
   return data3;
 }
+function drawScatterPlot(data){
+  let strictISOParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
+  let svg = d3.select("#scatterPlot"),
+  margin = {top: 20, right: 80, bottom: 30, left: 40},
+  width = svg.attr("width") - margin.left - margin.right,
+  height = svg.attr("height") - margin.top - margin.bottom;
+ 
+  let x = d3.scaleTime().range([0, width]);  // x scale
+  let y = d3.scaleLinear().range([height, 0]); // y scale
+  let color = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
+  // scale domains
+  x.domain(d3.extent(data, d => {
+    return strictISOParse(d.updated_time);
+  })).nice();
+  y.domain(d3.extent(data, d => d.jpy)).nice();
+
+  let g = svg.append("g")
+             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  // Create x axis and move to the bottom
+  g.append("g")
+   .attr("class", "axis axis--x")
+   .attr("transform", "translate(0," + height + ")")
+   .call(d3.axisBottom(x))
+   .append("text")
+   .attr("class", "label")
+   .attr("x", width)
+   .attr("y", -6)
+   .style("text-anchor", "end")
+   .text("Date");
+   
+  // Create y axis and move to the left
+  g.append("g")
+   .attr("class", "axis axis--y")
+   .call(d3.axisLeft(y))
+   .append("text")
+   .attr("transform", "rotate(-90)")
+   .attr("y", 6)
+   .attr("dy", "0.71em")
+   .attr("fill", "#000")
+   .style("text-anchor", "end")
+   .text("Currency");
+
+  g.selectAll(".dot")
+   .data(data)
+   .enter()
+   .append("circle")
+   .attr("class", "dot")
+   .attr("r", 3.5)
+   .attr("cx", function(d) { return x(strictISOParse(d.updated_time)); })
+   .attr("cy", function(d) { return y(d.jpy); })
+   .style("fill", function(d) { return color(d.name); });
+}
+function tagColor(data){
+  let banks = data.reduce(function(res, obj){
+    if (!(obj.name in res)){
+      res.push(obj.name);
+    }
+    return res;
+  }, []);
+  banks = R.uniq(banks);
+  let svg = d3.select("#color"),
+  margin = {top: 10, right: 80, bottom: 30, left: 20},
+  width = svg.attr("width") - margin.left - margin.right,
+  height = svg.attr("height") - margin.top - margin.bottom;
+        
+  let color = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
+
+  let g = svg.append("g")
+             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  var legend = g.selectAll(".legend")
+        .data(banks)
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+  legend.append("rect")
+      //.attr("x", width - 18)
+      .attr("x", 0)
+      .attr("width", 20)
+      .attr("height", 20)
+      .style("fill", d => { return color(d); });
+  legend.append("text")
+      //.attr("x", width - 24)
+      .attr("x", 22)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "start")
+      .text(function(d) { return d; });
+}
 function drawLineGraph(data){
-  var svg = d3.select("#lineChart"),
+  let svg = d3.select("#lineChart"),
   margin = {top: 20, right: 80, bottom: 30, left: 40},
   width = svg.attr("width") - margin.left - margin.right,
   height = svg.attr("height") - margin.top - margin.bottom;
         
   // Append Group tag to the SVG
-  var g = svg.append("g")
+  let g = svg.append("g")
              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var strictISOParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
+  let strictISOParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
 
-  var x = d3.scaleTime().range([0, width]);  // x scale
-  var y = d3.scaleLinear().range([height, 0]); // y scale
-  var z = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
+  let x = d3.scaleTime().range([0, width]);  // x scale
+  let y = d3.scaleLinear().range([height, 0]); // y scale
+  let z = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
 
   // use line generator to generate path data.
-  var line = d3.line()
+  let line = d3.line()
     .curve(d3.curveBasis)
     .x(function(d) { 
       return x(d.date);
@@ -57,7 +145,7 @@ function drawLineGraph(data){
       return y(d.currency);
     });
 
-  var bank_objs = data.reduce(function(res, obj){
+  let bank_objs = data.reduce(function(res, obj){
     if (!(obj.name in res)){
       res[obj.name] = [];
     }
@@ -67,7 +155,7 @@ function drawLineGraph(data){
     });
     return res;
   }, {});
-  var banks = Object.keys(bank_objs).map(function(key){
+  let banks = Object.keys(bank_objs).map(function(key){
     return {
       name: key,
       values: bank_objs[key]
@@ -112,7 +200,7 @@ function drawLineGraph(data){
    .text("Currency");
 
   // Bind the data
-  var bank = g.selectAll(".bank")
+  let bank = g.selectAll(".bank")
       .data(banks)
       .enter().append("g")
       .attr("class", "bank");
@@ -260,6 +348,12 @@ function getCurrencyData(){
   ).then(data => {
     drawLineGraph(data);
     return data;  
+  }).then(data => {
+    drawScatterPlot(data);
+    return data;
+  }).then(data =>{
+    tagColor(data);
+    return data;
   }).then(data => {
     const uniq_keys = drawTableHead(data)
     drawTableByPage = R.partial(drawTable, [data, uniq_keys]);
