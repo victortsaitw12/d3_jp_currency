@@ -12,9 +12,18 @@ function showUserInfo(){
   var url = window.location.href;
   let params = new URL(url).searchParams;
   let user = JSON.parse(params.get('user'));
-  let user_photo = user.user.facebook.photo;
+  let user_photo = '';
+  let user_name =  '';
+  if(user.user.facebook){
+    user_photo = user.user.facebook.photo;
+    user_name = user.user.facebook.name;
+  }
+  if(user.user.google){
+    user_photo = user.user.google.photo;
+    user_name = user.user.google.name;
+  }
   d3.select("#userPhoto").attr("src", user_photo);
-  d3.select("#userName").text("Hi, " + user.user.facebook.name);
+  d3.select("#userName").text("Hi, " + user_name);
 }
 function translateDataForTable(data){
   var data2 = R.groupBy(function(currency){
@@ -344,7 +353,8 @@ function drawPageButton(data){
 }
 function getCurrencyData(){
   d3.json(
-    "http://localhost:8081/jpy_currency?token=" + getJWT()
+    // "http://localhost:8081/jpy_currency?token=" + getJWT()
+    "/restful/jpy_currency?token=" + getJWT()
   ).then(data => {
     drawLineGraph(data);
     return data;  

@@ -1,5 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
-const url = "mongodb://mongo:27017/";
+const url = "mongodb://" + process.env.MONGO_URL + "/";
 
 class Mongo{
   constructor(){
@@ -17,8 +17,19 @@ class Mongo{
   }
 
   findUserByEmail(email){
+    return this.db.findOne({'email': email}).then(user => {
+      return user;
+    });
+  }
+
+  findUserByFacebookEmail(email){
     return this.db.findOne({'facebook.email': email}).then(user => {
-      // if(!user) throw new Error("USER_NOT_EXIST");
+      return user;
+    });
+  }
+
+  findUserByGoogleEmail(email){
+    return this.db.findOne({'google.email': email}).then(user => {
       return user;
     });
   }
@@ -30,9 +41,19 @@ class Mongo{
     });
   }
 
-  createUser(user){
-    console.log('create user:' + user);
-    return this.db.insert(user);
+  upsertUser(user){
+    if(user.facebook){
+      user.email = user.facebook.email;
+    }
+    if(user.google){
+      user.email = user.google.email;
+    }
+    user.updated_dt = Date.now();
+    return this.db.update({
+      'email': user.email
+    }, user, {'upsert': 1}).then(result => {
+      return user;  
+    });
   }
 
   deleteUser(id){

@@ -16,7 +16,7 @@ spec:
         app: web-deployment
     spec:
       containers:
-      - image: victortsaitw12/d3-practice-web:v2
+      - image: victortsaitw12/d3-practice-web:v4
         imagePullPolicy: Always
         name: d3-practice-web
         ports:

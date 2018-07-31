@@ -11,7 +11,7 @@ from jpy_currency.spiders.currencyChangHwa import CurrencyChangHwaSpider
 
 spiders = [CurrencyChinaSpider, CurrencyTaiwanSpider, CurrencyFirstSpider,
 CurrencyChangHwaSpider]
-sleep_interval = 3600
+sleep_interval = 7200
 
 def crawl_job():
     settings = get_project_settings()

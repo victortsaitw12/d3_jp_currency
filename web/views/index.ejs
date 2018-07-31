@@ -2,35 +2,91 @@
 <html>
   <head>
     <title>Node Authentication</title>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"> <!-- load bootstrap css -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"> <!-- load bootstrap css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css">
     <style>
       body { padding-top:80px; }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/api:client.js"></script>
+
   </head>
   <body>
     <script>
     function checkFBLoginState() {
       FB.login(function(response) {
-        console.log(response);
         if (response.status === 'connected') {
           $.ajax({
             type: 'GET',
-            url: 'http://localhost:9000/auth/facebook/token',
+            url: '/auth/facebook/token',
             data: 'access_token=' + response.authResponse.accessToken,
           }).done(response => {
-            console.log(response);
-            window.location.href = 'http://localhost:8080/dashbord?user=' +
+            window.location.href = '/dashbord?user=' +
               JSON.stringify(response);
           });
-        } 
+        } else {
+          console.log(response);  
+        }
       });
     }
+    function startApp() {
+      $.ajax({
+        type: 'GET',
+        url: '/auth/googleAppID',
+      }).done(response => {
+        startGoogleAuth(response.app_id);
+      });
+
+      $('#localLogin').click(() => {
+        $.ajax({
+          type: 'POST',
+          url: '/auth/local',
+          data: {
+            email: $('#inputEmail').val(),
+            password: $('#inputPassword').val()  
+          }
+        }).done(response => {
+          console.log(response);
+          window.location.href = '/dashbord?user=' +
+            JSON.stringify(response);
+        });
+      });
+        
+    }
+
+    function startGoogleAuth(app_id){
+      gapi.load('auth2', function(){
+        // Retrieve the singleton for the GoogleAuth library and set up the client.
+        auth2 = gapi.auth2.init({
+          client_id: app_id,
+          cookiepolicy: 'single_host_origin',
+          // Request scopes in addition to 'profile' and 'email'
+          //scope: 'additional_scope'
+        });
+        auth2.attachClickHandler(
+          document.getElementById('googleLogin')
+          , {},
+           googleUser => {
+              $.ajax({
+                type: 'GET',
+                url: '/auth/google/token',
+                data: 'access_token=' + googleUser.getAuthResponse().id_token
+              }).done(response => {
+                window.location.href = '/dashbord?user=' +
+                  JSON.stringify(response);
+              });
+          }, 
+          error => {
+            alert(JSON.stringify(error, undefined, 2));
+        });
+      });
+    };
     window.fbAsyncInit = function() {
       $.ajax({
         type: 'GET',
-        url: 'http://localhost:9000/appID',
+        url: '/auth/appID',
       }).done(response => {
         console.log(response);
         FB.init({
@@ -53,11 +109,37 @@
 
     </script>
     <div class="container">
-      <div class="jumbotron text-center">
-        <h1><span class="fa fa-sign-in"></span> Authentication</h1>
-        <p>Login or Register with:</p>
-        <a class="btn btn-primary" onClick="return checkFBLoginState();"><span class="fa fa-facebook"></span> Facebook</a>
+      <div class="row">
+        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+          <div class="card card-signin my-5">
+            <div class="card-body">
+              <h5 class="card-title text-center">Sign In</h5>
+              <form class="form-signin">
+                <div class="form-label-group">
+                  <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+                  <label for="inputEmail">Email address</label>
+                </div>
+
+                <div class="form-label-group">
+                  <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+                  <label for="inputPassword">Password</label>
+                </div>
+
+                <div class="custom-control custom-checkbox mb-3">
+                  <input type="checkbox" class="custom-control-input" id="customCheck1">
+                  <label class="custom-control-label" for="customCheck1">Remember password</label>
+                </div>
+                <button type="button" id="localLogin" class="btn btn-lg btn-primary btn-block text-uppercase">Sign in</button>
+                <hr class="my-4">
+                <button type="button" id="googleLogin" class="btn btn-lg btn-google btn-block text-uppercase"><i class="fab fa-google mr-2"></i> Sign in with Google</button>
+                <button type="button" class="btn btn-lg btn-facebook btn-block text-uppercase" onClick="return checkFBLoginState();"><i class="fab fa-facebook-f mr-2"></i> Sign in with Facebook</button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    <script>startApp();</script>
   </body>
 </html>
+

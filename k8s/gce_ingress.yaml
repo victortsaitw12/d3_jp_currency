@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: fanout-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: ingress-ip
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: web-service
+          servicePort: 8080
+      - path: /auth/*
+        backend:
+          serviceName: auth-service
+          servicePort: 9000
+      - path: /restful/*
+        backend:
+          serviceName: restful-service
+          servicePort: 8081

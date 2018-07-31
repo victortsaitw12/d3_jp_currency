@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: web-deployment
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 1
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: web-deployment
+    spec:
+      containers:
+      - image: victortsaitw12/d3-practice-web:v5
+        imagePullPolicy: Always
+        name: d3-practice-web
+        ports:
+          - containerPort: 8080
+        env:
+          - name: AUTH_URL
+            value: "auth-service:9000"
+          - name: MONGO_URL
+            value: "mongodb-service:27017"

@@ -13,5 +13,6 @@ class CurrencyItem(scrapy.Item):
     name = scrapy.Field()
     jpy = scrapy.Field()
     updated_time = scrapy.Field()
+    all_data = scrapy.Field()
     pass
 

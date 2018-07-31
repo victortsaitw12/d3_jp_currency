@@ -34,7 +34,13 @@ function start(db){
     next();
   });
 
-  app.get('/jpy_currency', (req, res) => {
+  app.get('/', (req, res) => {
+    res.json({
+      api: 'restful'  
+    });
+  });
+
+  app.get('/restful/jpy_currency', (req, res) => {
     http.get(
       'http://' + process.env.AUTH_URL + '/validateJWT?token=' + req.query.token
     ,auth_res => {
