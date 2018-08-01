@@ -16,7 +16,7 @@ spec:
         app: crawler-deployment
     spec:
       containers:
-      - image: victortsaitw12/d3-practice-crawler
+      - image: victortsaitw12/d3-practice-crawler:v2
         imagePullPolicy: Always
         name: d3-practice-crawler
         env:

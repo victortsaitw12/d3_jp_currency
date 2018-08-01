@@ -20,7 +20,7 @@ class CurrencyTaiwanSpider(scrapy.Spider):
             updated_time = datetime.now()
         )
         currency_table = response.xpath(
-          '//div[1]/main/div[4]/table/tbody'
+          '//div[1]/main/div[3]/table/tbody'
         )
         jpy = ''
         for row in currency_table.xpath('tr'):
@@ -37,6 +37,26 @@ class CurrencyTaiwanSpider(scrapy.Spider):
                 currencies.append(c)
             if re.match('\W*JPY\W*', currencies[0]):
                 jpy = currencies[2]
-        item['jpy'] = jpy
-        yield item
+                item['currency'] = jpy
+                item['coin_type'] = 'jpy'
+                item['flow_type'] = 'cash_selling'
+                yield item
+            if re.match('\W*THB\W*', currencies[0]):
+                thb = currencies[2]
+                item['currency'] = thb
+                item['coin_type'] = 'thb'
+                item['flow_type'] = 'cash_selling'
+                yield item
+            if re.match('\W*USD\W*', currencies[0]):
+                usd = currencies[2]
+                item['currency'] = usd
+                item['coin_type'] = 'usd'
+                item['flow_type'] = 'cash_selling'
+                yield item
+            if re.match('\W*EUR\W*', currencies[0]):
+                eur = currencies[2]
+                item['currency'] = eur
+                item['coin_type'] = 'eur'
+                item['flow_type'] = 'cash_selling'
+                yield item
 

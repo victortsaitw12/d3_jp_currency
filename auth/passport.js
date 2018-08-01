@@ -94,6 +94,9 @@ async function verifyGoogleToken(token) {
   return mongo.findUserByGoogleEmail(
     profile.email
   ).then(user => {
+    if(!user){
+      user = {};
+    }
     return upsertGoogleUser(user, token, profile);
   }).then(user => {
     Object.assign(user, {
@@ -120,6 +123,9 @@ exports.routing = function(passport){
     return mongo.findUserByEmail(
       profile.emails[0].value
     ).then(user => {
+      if(!user){
+        user = {};
+      }
       return upsertFacebookUser(user, token, profile);
     }).then(user => {
       Object.assign(user, {

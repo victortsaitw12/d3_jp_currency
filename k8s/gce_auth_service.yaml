@@ -31,7 +31,7 @@ spec:
         app: auth-deployment
     spec:
       containers:
-      - image: victortsaitw12/d3-practice-auth:v2
+      - image: victortsaitw12/d3-practice-auth:v4
         imagePullPolicy: Always
         name: d3-practice-auth
         ports:

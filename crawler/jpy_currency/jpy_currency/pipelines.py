@@ -11,8 +11,10 @@ from scrapy.conf import settings
 class CurrencyPipeline(object):
 
     def process_item(self, item, spider):
-        print 'process item:%s' % dict(item)
-        item['jpy'] = float(item['jpy'])
+        item['currency'] = float(item['currency'])
+        item['updated_time'] = item['updated_time'].replace(second=0)
         db = Utility.getDB()
+        print 'process item:%s' % dict(item)
         db[settings['MONGO_COLLECTION']].insert_one(dict(item))
+        print 'finish process item:%s' % dict(item)
         return item

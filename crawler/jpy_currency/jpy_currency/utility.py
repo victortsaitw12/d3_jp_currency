@@ -42,7 +42,7 @@ class Utility(object):
             message = '%s:%s: JPY Currency %s' % (
                 doc['name'], 
                 doc['updated_time'].strftime("%Y-%m-%d %H:%M:%S"),
-                doc['jpy']
+                doc['currency']
             )
             Utility.send_mail(message, message)
 

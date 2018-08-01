@@ -13,6 +13,9 @@ class CurrencyItem(scrapy.Item):
     name = scrapy.Field()
     jpy = scrapy.Field()
     updated_time = scrapy.Field()
+    currency = scrapy.Field()
+    coin_type = scrapy.Field()
+    flow_type = scrapy.Field()
     all_data = scrapy.Field()
     pass
 

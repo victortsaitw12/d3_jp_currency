@@ -30,6 +30,25 @@ class CurrencyChangHwaSpider(scrapy.Spider):
                 currencies.append(c)
             if re.match("\W*ＪＰＹ－Ｃ\W*", currencies[0].encode('UTF-8')):
                 jpy = currencies[2]
-        item['jpy'] = jpy
-        yield item
-
+                item['currency'] = jpy
+                item['coin_type'] = 'jpy'
+                item['flow_type'] = 'cash_selling'
+                yield item
+            if re.match("\W*ＴＨＢ\W*", currencies[0].encode('UTF-8')):
+                thb = currencies[2]
+                item['currency'] = thb
+                item['coin_type'] = 'thb'
+                item['flow_type'] = 'cash_selling'
+                yield item
+            if re.match("\W*ＥＵＲ－Ｃ\W*", currencies[0].encode('UTF-8')):
+                eur = currencies[2]
+                item['currency'] = eur
+                item['coin_type'] = 'eur'
+                item['flow_type'] = 'cash_selling'
+                yield item
+            if re.match("\W*ＵＳＤ－Ｃ\W*", currencies[0].encode('UTF-8')):
+                usd = currencies[2]
+                item['currency'] = usd
+                item['coin_type'] = 'usd'
+                item['flow_type'] = 'cash_selling'
+                yield item

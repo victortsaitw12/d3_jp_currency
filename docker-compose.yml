@@ -11,7 +11,7 @@ services:
     depends_on:
       - mongo
     links:
-      - mongo
+      - mongo:mongodb-service
     environment:
       - MONGO_URL=mongo:27017
 
