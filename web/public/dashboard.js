@@ -1,7 +1,13 @@
 const page_count = 10;
 const max_page = 4;
+const strictISOParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
 let current_page = 0;
 let drawTableByPage = null;
+let color = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
+let x_scatter_scale = null;
+let y_scatter_scale = null;
+let x_line_scale = null;
+let y_line_scale = null;
 function getJWT(){
   var url = window.location.href;
   let params = new URL(url).searchParams;
@@ -29,51 +35,83 @@ function translateDataForTable(data){
   var data2 = R.groupBy(function(currency){
     return currency.updated_time
   })(data);
+  let coin_type = '';
   var data3 =  R.map((updated_time) => {
     let currencies = data2[updated_time];
     let currency = R.reduce((acc, value) => {
-      acc[value['name']] = value['jpy'];  
+      acc[value['name']] = value['currency'];  
+      coin_type = value['coin_type'];
       return acc;
     }, {}, currencies);
     currency.updated_time = updated_time;
+    currency.coin_type = coin_type;
     return currency;
   }, Object.keys(data2));
   return data3;
 }
-function drawScatterPlot(data){
-  let strictISOParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
-  let svg = d3.select("#scatterPlot"),
-  margin = {top: 20, right: 80, bottom: 30, left: 40},
-  width = svg.attr("width") - margin.left - margin.right,
-  height = svg.attr("height") - margin.top - margin.bottom;
- 
-  let x = d3.scaleTime().range([0, width]);  // x scale
-  let y = d3.scaleLinear().range([height, 0]); // y scale
-  let color = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
-  // scale domains
-  x.domain(d3.extent(data, d => {
+function refreshScatterPlot(data){
+  let svg = d3.select(".scatter_plot");
+  x_scatter_scale.domain(d3.extent(data, d => {
     return strictISOParse(d.updated_time);
   })).nice();
-  y.domain(d3.extent(data, d => d.jpy)).nice();
+  y_scatter_scale.domain(d3.extent(data, d => d.currency)).nice();
+
+  let update_dot = svg.selectAll("circle").data(data, d => {
+    let key = JSON.stringify(d);
+    console.log(key);
+    return key;
+  });
+  update_dot.exit().remove();
+  update_dot.enter()
+     .append("circle")
+     .transition()
+     .attr("class", "dot")
+     .attr("r", 3.5)
+     .attr("cx", function(d) { 
+       return x_scatter_scale(strictISOParse(d.updated_time));
+     })
+     .attr("cy", function(d) {
+       return y_scatter_scale(d.currency);
+     })
+     .style("fill", function(d) { return color(d.name); });
+  svg.select(".x.axis")
+     .call(d3.axisBottom(x_scatter_scale));
+  svg.select(".y.axis")
+     .call(d3.axisLeft(y_scatter_scale));
+  svg.exit().remove();
+}
+function drawScatterPlot(data){
+  let svg = d3.select("#scatterPlot"),
+  margin = {top: 20, right: 80, bottom: 30, left: 40},
+  scatter_width = svg.attr("width") - margin.left - margin.right,
+  scatter_height = svg.attr("height") - margin.top - margin.bottom;
+  x_scatter_scale = d3.scaleTime().range([0, scatter_width]);  // x scale
+  y_scatter_scale = d3.scaleLinear().range([scatter_height, 0]); // y scale
+  // scale domains
+  x_scatter_scale.domain(d3.extent(data, d => {
+    return strictISOParse(d.updated_time);
+  })).nice();
+  y_scatter_scale.domain(d3.extent(data, d => d.currency)).nice();
 
   let g = svg.append("g")
+             .attr('class', 'scatter_plot')
              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   // Create x axis and move to the bottom
   g.append("g")
-   .attr("class", "axis axis--x")
-   .attr("transform", "translate(0," + height + ")")
-   .call(d3.axisBottom(x))
+   .attr("class", "x axis")
+   .attr("transform", "translate(0," + scatter_height + ")")
+   .call(d3.axisBottom(x_scatter_scale))
    .append("text")
    .attr("class", "label")
-   .attr("x", width)
+   .attr("x", scatter_width)
    .attr("y", -6)
    .style("text-anchor", "end")
    .text("Date");
    
   // Create y axis and move to the left
   g.append("g")
-   .attr("class", "axis axis--y")
-   .call(d3.axisLeft(y))
+   .attr("class", "y axis")
+   .call(d3.axisLeft(y_scatter_scale))
    .append("text")
    .attr("transform", "rotate(-90)")
    .attr("y", 6)
@@ -82,15 +120,19 @@ function drawScatterPlot(data){
    .style("text-anchor", "end")
    .text("Currency");
 
-  g.selectAll(".dot")
-   .data(data)
-   .enter()
-   .append("circle")
-   .attr("class", "dot")
-   .attr("r", 3.5)
-   .attr("cx", function(d) { return x(strictISOParse(d.updated_time)); })
-   .attr("cy", function(d) { return y(d.jpy); })
-   .style("fill", function(d) { return color(d.name); });
+  let update_dot = g.selectAll("circle").data(data, d => JSON.stringify(d));
+  update_dot.exit().remove();
+  update_dot.enter()
+            .append("circle")
+            .attr("class", "dot")
+            .attr("r", 3.5)
+            .attr("cx", function(d) {
+              return x_scatter_scale(strictISOParse(d.updated_time));
+            })
+            .attr("cy", function(d) {
+              return y_scatter_scale(d.currency);
+            })
+            .style("fill", function(d) { return color(d.name); });
 }
 function tagColor(data){
   let banks = data.reduce(function(res, obj){
@@ -105,8 +147,6 @@ function tagColor(data){
   width = svg.attr("width") - margin.left - margin.right,
   height = svg.attr("height") - margin.top - margin.bottom;
         
-  let color = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
-
   let g = svg.append("g")
              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   var legend = g.selectAll(".legend")
@@ -128,6 +168,74 @@ function tagColor(data){
       .style("text-anchor", "start")
       .text(function(d) { return d; });
 }
+function refreshLineGraph(data){
+  let bank_objs = data.reduce(function(res, obj){
+    if (!(obj.name in res)){
+      res[obj.name] = [];
+    }
+    res[obj.name].push({
+      date: strictISOParse (obj.updated_time),
+      currency: obj.currency
+    });
+    return res;
+  }, {});
+  let banks = Object.keys(bank_objs).map(function(key){
+    return {
+      name: key,
+      values: bank_objs[key]
+    }  
+  });
+  x_line_scale.domain([
+    d3.min(banks, function(c) { 
+      return d3.min(c.values, function(d){ return d.date; });
+    }),
+    d3.max(banks, function(c) { 
+      return d3.max(c.values, function(d){ return d.date; });
+    })
+  ]);
+  y_line_scale.domain([
+    d3.min(banks, function(c) { 
+      return d3.min(c.values, function(d){ return d.currency; });
+    }),
+    d3.max(banks, function(c) { 
+      return d3.max(c.values, function(d){ return d.currency; });
+    })
+  ]);
+  //color.domain(banks.map(function(c){
+  //  return c.name;  
+  //}));
+  let line = d3.line()
+    .curve(d3.curveBasis)
+    .x(function(d) { 
+      return x_line_scale(d.date);
+    })
+    .y(function(d) { 
+      return y_line_scale(d.currency);
+    });
+  let svg = d3.select(".line_chart");
+  svg.select('.x.axis')
+     .attr("class", "x axis")
+     .call(d3.axisBottom(x_line_scale));
+  svg.select('.y.axis')
+     .attr("class", "y axis")
+     .call(d3.axisLeft(y_line_scale))
+  svg.transition();
+  let bank = svg.selectAll(".bank");
+  let update_bank = bank.data(banks, d => JSON.stringify(d));
+  update_bank.exit().remove()
+  let enter_bank = update_bank.enter().append("g")
+      .attr("class", "bank");
+  // Render the curve line
+  enter_bank.append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { 
+        return line(d.values); 
+      })
+      .style("stroke", function(d) { 
+        return color(d.name); // make a color from color scale
+      });
+  
+}
 function drawLineGraph(data){
   let svg = d3.select("#lineChart"),
   margin = {top: 20, right: 80, bottom: 30, left: 40},
@@ -136,22 +244,21 @@ function drawLineGraph(data){
         
   // Append Group tag to the SVG
   let g = svg.append("g")
+             .attr("class", "line_chart")
              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  let strictISOParse = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
 
-  let x = d3.scaleTime().range([0, width]);  // x scale
-  let y = d3.scaleLinear().range([height, 0]); // y scale
-  let z = d3.scaleOrdinal(d3.schemeCategory10); // color scale (10 colors)
+  x_line_scale = d3.scaleTime().range([0, width]);  // x scale
+  y_line_scale = d3.scaleLinear().range([height, 0]); // y scale
 
   // use line generator to generate path data.
   let line = d3.line()
     .curve(d3.curveBasis)
     .x(function(d) { 
-      return x(d.date);
+      return x_line_scale(d.date);
     })
     .y(function(d) { 
-      return y(d.currency);
+      return y_line_scale(d.currency);
     });
 
   let bank_objs = data.reduce(function(res, obj){
@@ -160,7 +267,7 @@ function drawLineGraph(data){
     }
     res[obj.name].push({
       date: strictISOParse (obj.updated_time),
-      currency: obj.jpy
+      currency: obj.currency
     });
     return res;
   }, {});
@@ -171,7 +278,7 @@ function drawLineGraph(data){
     }  
   });
   // scale domains
-  x.domain([
+  x_line_scale.domain([
     d3.min(banks, function(c) { 
       return d3.min(c.values, function(d){ return d.date; });
     }),
@@ -179,7 +286,7 @@ function drawLineGraph(data){
       return d3.max(c.values, function(d){ return d.date; });
     })
   ]);
-  y.domain([
+  y_line_scale.domain([
     d3.min(banks, function(c) { 
       return d3.min(c.values, function(d){ return d.currency; });
     }),
@@ -187,20 +294,20 @@ function drawLineGraph(data){
       return d3.max(c.values, function(d){ return d.currency; });
     })
   ]);
-  z.domain(banks.map(function(c){
-    return c.name;  
-  }));
+  //color.domain(banks.map(function(c){
+  //  return c.name;  
+  //n}));
 
   // Create x axis and move to the bottom
   g.append("g")
-   .attr("class", "axis axis--x")
+   .attr("class", "x axis")
    .attr("transform", "translate(0," + height + ")")
-   .call(d3.axisBottom(x));
+   .call(d3.axisBottom(x_line_scale));
 
   // Create y axis and move to the left
   g.append("g")
-   .attr("class", "axis axis--y")
-   .call(d3.axisLeft(y))
+   .attr("class", "y axis")
+   .call(d3.axisLeft(y_line_scale))
    .append("text")
    .attr("transform", "rotate(-90)")
    .attr("y", 6)
@@ -209,19 +316,19 @@ function drawLineGraph(data){
    .text("Currency");
 
   // Bind the data
-  let bank = g.selectAll(".bank")
-      .data(banks)
-      .enter().append("g")
+  let bank = g.selectAll(".bank");
+  let update_bank = bank.data(banks, d => JSON.stringify(d));
+  update_bank.exit().remove();
+  let enter_bank = update_bank.enter().append("g")
       .attr("class", "bank");
-
   // Render the curve line
-  bank.append("path")
+  enter_bank.append("path")
       .attr("class", "line")
       .attr("d", function(d) { 
         return line(d.values); 
       })
       .style("stroke", function(d) { 
-        return z(d.name); // make a color from color scale
+        return color(d.name); // make a color from color scale
       }).on("mouseover", function(d){
         var tip = d3.select("#tooltip");
         tip.style("left", (+d3.event.clientX + 10) + 'px');
@@ -231,23 +338,6 @@ function drawLineGraph(data){
       }).on("mouseout", function(d){
         d3.select("#tooltip").classed("hidden", true);  
       });
-
-  // Add the text at the end of lines
-  //bank.append("text")
-  //    .datum(function(d) { return {
-  //      name: d.name, 
-  //      value: d.values[d.values.length - 1]
-  //    }; })
-  //    .attr("transform", function(d) { 
-  //      return "translate(" + x(d.value.date) + "," + y(d.value.currency) + ")";
-  //    })
-  //    .attr("x", 20)
-  //    .attr("dy", "0.35em")
-  //    .attr("text-anchor", "start")
-  //    .style("font", "10px sans-serif")
-  //    .text(function(d) { 
-  //      return d.name ;
-  //    });
 };
 function drawTableHead(data){
   var rows_data = translateDataForTable(data);
@@ -260,6 +350,7 @@ function drawTableHead(data){
   }, rows_data);
   uniq_keys = R.compose(
     R.prepend('updated_time'),
+    R.reject(R.equals("coin_type")),
     R.reject(R.equals("updated_time"))
   )(uniq_keys);
   let head = d3.select('#head_id');
@@ -277,7 +368,7 @@ function drawTableHead(data){
   });
   return uniq_keys;
 }
-function drawTable(data, uniq_keys, page){
+function drawTable(coin_type, data, uniq_keys, page){
   var rows_data = translateDataForTable(data);
   const begin = page * page_count;
   const end = begin + page_count;
@@ -287,14 +378,18 @@ function drawTable(data, uniq_keys, page){
   table_body.exit().remove();
   let rows = table_body.selectAll('tr');
   let updated_rows = rows.data(rows_data, d => {
-    return d.updated_time;
+    return d.coin_type + '.' + d.updated_time;
   });
   updated_rows.exit().remove();
   let enter_rows = updated_rows.enter().append('tr');
   let cells = enter_rows.selectAll('td')
                   .data((row) => {
                      let update_col_data = uniq_keys.map(column => {
-                       return { column: column, value: row[column], date: new Date()};  
+                       return { 
+                         column: column, 
+                         value: row[column], 
+                         date: new Date(),
+                       };  
                      });
                      return update_col_data;
                   });
@@ -317,6 +412,7 @@ function drawTable(data, uniq_keys, page){
             }
             return d.value ? d.value : '-';
         });
+  cells.exit().remove();
   enter_rows.exit().remove();
 }
 function drawPageButton(data){
@@ -351,10 +447,9 @@ function drawPageButton(data){
       // d3.select(d3.event.target.parentNode).classed('active', true);
     });
 }
-function getCurrencyData(){
+function getCurrencyData(coin_type){
   d3.json(
-    // "http://localhost:8081/jpy_currency?token=" + getJWT()
-    "/restful/jpy_currency?token=" + getJWT()
+    "/restful/jpy_currency?coin_type="+ coin_type + "&" + "token=" + getJWT()
   ).then(data => {
     drawLineGraph(data);
     return data;  
@@ -366,7 +461,7 @@ function getCurrencyData(){
     return data;
   }).then(data => {
     const uniq_keys = drawTableHead(data)
-    drawTableByPage = R.partial(drawTable, [data, uniq_keys]);
+    drawTableByPage = R.partial(drawTable, [coin_type, data, uniq_keys]);
     drawTableByPage(0);
     return data;
   }).then(data => {
@@ -374,7 +469,30 @@ function getCurrencyData(){
     return data;
   });
 };
-
+function refreshCurrencyData(coin_type){
+  d3.json(
+    "/restful/jpy_currency?coin_type="+ coin_type + "&" + "token=" + getJWT()
+  ).then(data => {
+    const uniq_keys = drawTableHead(data);
+    drawTableByPage = R.partial(drawTable, [coin_type, data, uniq_keys]);
+    drawTableByPage(0);
+    return data;
+  }).then(data => {
+    drawPageButton();
+    return data;
+  }).then(data => {
+    refreshScatterPlot(data);
+    return data;  
+  }).then(data => {
+    refreshLineGraph(data);
+    return data;  
+  });
+}
+function regestEvent(){
+  d3.selectAll(".nav-link").on("click", d => {
+    refreshCurrencyData(d3.event.target.id);
+  });
+}
 showUserInfo();
-getCurrencyData();
-
+getCurrencyData('jpy');
+regestEvent();

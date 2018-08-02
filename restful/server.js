@@ -3,11 +3,12 @@ const http = require('http');
 const app = express()
 const path = require('path');
 
-function fetchData(db){
+function fetchData(db, coin_type){
   return Promise.resolve().then(() => {
     return new Promise((resolve, reject) => {
-    db.find({}, { projection: { _id: 0 } })
+    db.find({'coin_type': coin_type}, { projection: { _id: 0 } })
       .sort({ updated_time: -1 })
+      .limit(50)
       .toArray((err, data) => {
         if(err){
           return reject(err);
@@ -54,7 +55,7 @@ function start(db){
           if(!db) reject('db is undefined');  
           return data;
         }).then(data => {
-           return fetchData(db);
+           return fetchData(db, req.query.coin_type);
         }).then(data => {
           return res.json(data);
         }).catch(err => {
