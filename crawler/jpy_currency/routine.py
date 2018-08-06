@@ -8,9 +8,11 @@ from jpy_currency.spiders.currencyChina import CurrencyChinaSpider
 from jpy_currency.spiders.currencyTaiwan import CurrencyTaiwanSpider
 from jpy_currency.spiders.currencyFirst import CurrencyFirstSpider
 from jpy_currency.spiders.currencyChangHwa import CurrencyChangHwaSpider
+from jpy_currency.spiders.articleSpider import ArticleSpider 
 
-spiders = [CurrencyChinaSpider, CurrencyTaiwanSpider, CurrencyFirstSpider,
-CurrencyChangHwaSpider]
+#spiders = [CurrencyChinaSpider, CurrencyTaiwanSpider, CurrencyFirstSpider,
+#CurrencyChangHwaSpider]
+spiders = [ArticleSpider]
 sleep_interval = 7200
 
 def crawl_job():

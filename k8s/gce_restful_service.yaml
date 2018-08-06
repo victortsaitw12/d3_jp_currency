@@ -31,7 +31,7 @@ spec:
         app: restful-deployment
     spec:
       containers:
-      - image: victortsaitw12/d3-practice-restful
+      - image: victortsaitw12/d3-practice-restful:v2
         imagePullPolicy: Always
         name: d3-practice-restful
         ports:

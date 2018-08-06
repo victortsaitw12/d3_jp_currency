@@ -6,17 +6,40 @@ from scrapy.conf import settings
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from datetime import datetime, timedelta
+from elasticsearch_dsl import DocType, analyzer, Date, Keyword, Integer, Text
+from elasticsearch_dsl.connections import connections
+
+
+elk_uri = settings['ELK_URI']
+connections.create_connection(hosts=[elk_uri])
+class Article(DocType):
+  #title = Text(analyzer="ik_max_word")
+  title = Text(analyzer='snowball', fields={'raw': Keyword()})
+  content = Text(analyzer='snowball', fields={'raw': Keyword()})
+  #content = Text(analyzer="ik_max_word")
+  class Index:
+      name = 'article'
+
+Article.init()
 
 class Utility(object):
 
     db = None
     client = None
-
+    elk = None
     @staticmethod
     def init():
-        print 'init Mongo Connection'
+        print 'init Mongo & elk Connection'
         Utility.client = pymongo.MongoClient(settings['MONGO_URI'])
         Utility.db = Utility.client[settings['MONGO_DATABASE']]
+
+    @staticmethod
+    def saveToELK(item):
+        article = Article()
+        article.title = item["title"]
+        article.content = item['content']
+        print 'save to elk'
+        article.save()
 
     @staticmethod
     def getDB():

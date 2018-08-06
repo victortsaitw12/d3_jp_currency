@@ -93,8 +93,10 @@ DOWNLOAD_DELAY = 0.25
 MONGO_URI = 'mongodb-service:27017'
 MONGO_DATABASE = "items"
 MONGO_COLLECTION = "scrapy_items"
+ELK_URI = 'elasticsearch:9200'
 GMAIL_USER = 'your_gmaile_account@gmail.com'
 GMAIL_PASSWORD = 'your_gmail_application_password'
 ITEM_PIPELINES = {
     'jpy_currency.pipelines.CurrencyPipeline': 300,
+    'jpy_currency.pipelines.ArticlePipeline': 400,
 }

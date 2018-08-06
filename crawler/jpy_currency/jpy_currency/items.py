@@ -19,3 +19,7 @@ class CurrencyItem(scrapy.Item):
     all_data = scrapy.Field()
     pass
 
+class ArticleItem(scrapy.Item):
+    title = scrapy.Field()
+    content = scrapy.Field()
+    pass
