@@ -32,6 +32,8 @@ class ArticlePipeline(object):
         print 'process item:%s' % dict(item)
         Utility.saveToELK({
 	  'title': item['title'],
-	  'content': item['content']
+	  'content': item['content'],
+	  'article_id': item['article_id'],
+	  'time': item['time']
 	})
 	return item

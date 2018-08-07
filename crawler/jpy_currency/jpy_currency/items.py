@@ -22,4 +22,5 @@ class CurrencyItem(scrapy.Item):
 class ArticleItem(scrapy.Item):
     title = scrapy.Field()
     content = scrapy.Field()
+    article_id = scrapy.Field()
     pass

@@ -41,12 +41,16 @@ class Utility(object):
                                 "index": True,
                                 "analyzer": "ik_max_word",
                                 "search_analyzer": "ik_max_word"
-                            }
+                            },
+			    "time": {
+			      "type": "date",
+			    }
                         }
                     }
                 }
             })
         response = Utility.elk.index(index='article', doc_type='article',
+	  id=item['article_id'],
 	  body=item)
         print(response)
 
