@@ -6,21 +6,8 @@ from scrapy.conf import settings
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from datetime import datetime, timedelta
-from elasticsearch_dsl import DocType, analyzer, Date, Keyword, Integer, Text
-from elasticsearch_dsl.connections import connections
+from elasticsearch import Elasticsearch
 
-
-elk_uri = settings['ELK_URI']
-connections.create_connection(hosts=[elk_uri])
-class Article(DocType):
-  #title = Text(analyzer="ik_max_word")
-  title = Text(analyzer='snowball', fields={'raw': Keyword()})
-  content = Text(analyzer='snowball', fields={'raw': Keyword()})
-  #content = Text(analyzer="ik_max_word")
-  class Index:
-      name = 'article'
-
-Article.init()
 
 class Utility(object):
 
@@ -32,14 +19,36 @@ class Utility(object):
         print 'init Mongo & elk Connection'
         Utility.client = pymongo.MongoClient(settings['MONGO_URI'])
         Utility.db = Utility.client[settings['MONGO_DATABASE']]
+        Utility.elk = Elasticsearch(hosts= 'elasticsearch')
 
     @staticmethod
     def saveToELK(item):
-        article = Article()
-        article.title = item["title"]
-        article.content = item['content']
-        print 'save to elk'
-        article.save()
+        if Utility.elk is None:
+            Utility.elk = Elasticsearch(hosts= 'elasticsearch')
+        if Utility.elk.indices.exists(index='article') is not True:
+            res = Utility.elk.indices.create(index="article", body={
+                "mappings": {
+                    "article": {
+                        "properties": {
+                            "title": {
+                                "type": "text",
+                                "index": True,
+                                "analyzer": "ik_max_word",
+                                "search_analyzer": "ik_max_word"
+                            },
+                            "content": {
+                                "type": "text",
+                                "index": True,
+                                "analyzer": "ik_max_word",
+                                "search_analyzer": "ik_max_word"
+                            }
+                        }
+                    }
+                }
+            })
+        response = Utility.elk.index(index='article', doc_type='article',
+	  body=item)
+        print(response)
 
     @staticmethod
     def getDB():

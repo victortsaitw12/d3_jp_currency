@@ -38,6 +38,8 @@ def crawl():
 
 
 if __name__=="__main__":
+    from time import sleep
+    sleep(30)
     Utility.init()
     i = 0
     #while (Utility.getDB() is None):

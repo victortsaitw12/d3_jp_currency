@@ -14,7 +14,6 @@ class CurrencyPipeline(object):
 
     def process_item(self, item, spider):
         if not isinstance(item, CurrencyItem):
-            print 'do not process'
             return item
 
         item['currency'] = float(item['currency'])
@@ -31,4 +30,8 @@ class ArticlePipeline(object):
         if not isinstance(item, ArticleItem):
             return item
         print 'process item:%s' % dict(item)
-        Utility.saveToELK(item)
+        Utility.saveToELK({
+	  'title': item['title'],
+	  'content': item['content']
+	})
+	return item
