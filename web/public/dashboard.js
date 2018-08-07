@@ -58,7 +58,6 @@ function refreshScatterPlot(data){
 
   let update_dot = svg.selectAll("circle").data(data, d => {
     let key = JSON.stringify(d);
-    console.log(key);
     return key;
   });
   update_dot.exit().remove();
@@ -368,6 +367,45 @@ function drawTableHead(data){
   });
   return uniq_keys;
 }
+function drawNewsTable(coin_type, data, uniq_keys, page){
+  let table = d3.select('#newsList');
+  let table_body = table.select('#news_tbody_id');
+  let rows = table_body.selectAll('tr');
+  let updated_rows = rows.data(data, d => JSON.stringify(d));
+  updated_rows.exit().remove();
+  let enter_rows = updated_rows.enter().append('tr');
+  let cells = enter_rows.selectAll('td')
+                .data(row => {
+                  return ['time', 'title'].map(column => {
+                      return {
+                        column: column,
+                        value: row._source[column],
+                        date: new Date(),
+                      };
+                  });
+                });
+  cells.exit().remove();
+  cells.enter()
+       .append('td')
+       .text(d => {
+          if(d.column == "time"){
+            let updated_time = new Date(d.value);
+            let hours = updated_time.getHours();
+            let amOpm = hours >= 12 ? 'pm' : 'am';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            let min = updated_time.getMinutes();
+            min = min < 10 ? '0' + min : min;
+            return updated_time.getFullYear() + "-" +
+              (updated_time.getMonth() + 1) + "-" +
+              updated_time.getDate() + " " +
+              hours + ":" + min + " " + amOpm;
+            }
+            return d.value ? d.value : '-';
+       });
+  cells.exit().remove();
+  enter_rows.exit().remove();
+}
 function drawTable(coin_type, data, uniq_keys, page){
   var rows_data = translateDataForTable(data);
   const begin = page * page_count;
@@ -488,9 +526,21 @@ function refreshCurrencyData(coin_type){
     return data;  
   });
 }
+function refreshCurrencyNews(target){
+  const coin_type = d3.select(target).attr('data');
+  d3.json(
+    "/restful/news?coin_type="+ coin_type + "&" + "token=" + getJWT()
+  ).then(data => {
+    drawNewsTable(coin_type, data);
+    return data;  
+  }).catch(err => {
+    console.log(err.message);  
+  });
+}
 function regestEvent(){
   d3.selectAll(".nav-link").on("click", d => {
     refreshCurrencyData(d3.event.target.id);
+    refreshCurrencyNews(d3.event.target);
   });
 }
 showUserInfo();
