@@ -23,4 +23,5 @@ class ArticleItem(scrapy.Item):
     title = scrapy.Field()
     content = scrapy.Field()
     article_id = scrapy.Field()
+    time = scrapy.Field()
     pass
