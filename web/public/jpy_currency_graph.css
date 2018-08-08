@@ -53,3 +53,6 @@
   overflow-x: hidden;
   overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
 }
+#newsList tbody tr:hover td, #newsList tbody tr:hover th {
+    background-color: #09f2e6;
+}
