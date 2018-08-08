@@ -15,19 +15,16 @@ class ArticleSpider(scrapy.Spider):
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-      article = response.xpath('//div[@class="_2bF theme-list"]')
-      for sub_article in article.xpath('div'):
-          tag = sub_article.xpath('a[@data-exp-project="news-title"]')
+      article = response.xpath('//div[@class="_2bF theme-list"]/div/a[@title]')
+      for tag in article:
           title = tag.xpath('@title').extract_first()
-
-          if title is None:
-              continue
-          
-          time_tag = tag.xpath('//time')
-          time = time_tag.xpath('@datetime').extract_first()
-
           link = tag.xpath('@href').extract_first()
 	  article_id = tag.xpath('@data-exp-id').extract_first()
+          if article_id is None:
+	      continue
+          time_tag = tag.xpath('.//time')
+          time = time_tag.xpath('@datetime').extract_first()
+
           next_page = response.urljoin(link)
           request = scrapy.Request(next_page,
               callback=self.parse_article)

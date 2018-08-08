@@ -373,7 +373,14 @@ function drawNewsTable(coin_type, data, uniq_keys, page){
   let rows = table_body.selectAll('tr');
   let updated_rows = rows.data(data, d => JSON.stringify(d));
   updated_rows.exit().remove();
-  let enter_rows = updated_rows.enter().append('tr');
+  let enter_rows = updated_rows.enter().append('tr')
+       .attr('data-toggle', d => "modal")
+       .attr('data-target', d => "#exampleModalCenter")
+       .on('click', d => {
+          d3.select('#modelNewsTitle').text(d._source.title);
+	  console.log(d._source.content);
+          d3.select('#modelNewsBody').html(d._source.content.replace(/\n/g, "<br />"));
+       });
   let cells = enter_rows.selectAll('td')
                 .data(row => {
                   return ['time', 'title'].map(column => {
