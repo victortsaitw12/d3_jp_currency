@@ -4,17 +4,31 @@ const app = express()
 const path = require('path');
 
 function ElkfetchData(elasticsearch, coin_type) {
+  let query_body = {
+    "query": {
+      "bool": {
+        "should": [
+	 {
+          "match": {
+            "title": { "query": coin_type, "boost": 5 }
+           } 
+         }
+        ]
+      }
+    },
+    "sort": [
+      {
+        "time": {
+          "order": "desc"
+        }
+      }
+    ]
+  };
   return Promise.resolve().then(() => {
     return elasticsearch.search({
       index: 'article',
       type: 'article',
-      body: {
-        query: {
-          match: {
-            title: coin_type
-          }
-        }
-      }
+      body: query_body
     });
   }).then(function (resp) {
     console.log(resp);
