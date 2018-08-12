@@ -649,5 +649,5 @@ function regestEvent(){
   });
 }
 showUserInfo();
-getCurrencyData('jpy');
+getCurrencyData('usd');
 regestEvent();

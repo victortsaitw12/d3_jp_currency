@@ -36,6 +36,11 @@
     background-color: #999;
     border-radius: 25px;
 }
+#lineQRCode{
+    z-index: 0;
+    height:120px;
+    width: 120px;
+}
 .sidebar {
   position: fixed;
   top: 0;
