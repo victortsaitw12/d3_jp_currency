@@ -129,7 +129,7 @@ function drawScatterPlot(data){
               return x_scatter_scale(strictISOParse(d.updated_time));
             })
             .attr("cy", function(d) {
-              return y_scatter_scale(d.currency);
+              return y_scatter_scale(d.currency)
             })
             .style("fill", function(d) { return color(d.name); });
 }
@@ -204,7 +204,7 @@ function refreshLineGraph(data){
   //  return c.name;  
   //}));
   let line = d3.line()
-    .curve(d3.curveBasis)
+    // .curve(d3.curveBasis)
     .x(function(d) { 
       return x_line_scale(d.date);
     })
@@ -232,8 +232,51 @@ function refreshLineGraph(data){
       })
       .style("stroke", function(d) { 
         return color(d.name); // make a color from color scale
-      });
-  
+      }).on("mouseover", () => {
+        focus.style("display", null);  
+      }).on("mouseout", () => {
+        focus.transition().delay(700).style("display", "none");  
+      }).on("mousemove", mousemove);
+
+  let focus = d3.select('.bank')
+                .append("g").attr("class", "focus").style("display", "none");
+  let bank_dots = {};
+  banks.map( bank => {
+    bank_dots[bank.name] = {};
+    bank_dots[bank.name].tooltip = focus.append("g");
+    bank_dots[bank.name].tooltip.append("circle").attr("r", 2);
+    bank_dots[bank.name].tooltip.append("rect").attr("x", 8).attr("y", "-5")
+         .attr("width", 35)
+         .attr("height", '0.75em');
+    bank_dots[bank.name].tooltip.append("text").attr("x", 9).attr("dy", ".35em");     
+  });
+  const margin = {top: 20, right: 80, bottom: 30, left: 40};
+  const height = d3.select('#lineChart').attr("height") - margin.top - margin.bottom;
+  focus.append("line").attr("class", "focus line").attr("y1", margin.bottom)
+        .attr("y2", height);
+  function mousemove(events) {
+    const mouse_x = x_line_scale.invert(d3.mouse(this)[0])
+    const i = d3.bisector((d, x) => {
+      return new Date(x) - new Date(d.date);
+    }).left(events.values, mouse_x, 1);
+    let x_position = 0;
+    let y_min_position = d3.select("#lineChart").attr('height') + margin.top;
+    banks.map(bank => {   
+       const d0 = bank.values[i-1];
+       const d1 = bank.values[i];
+       const x0 = new Date(mouse_x);
+       const d = x0 > new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
+       const y_position = y_line_scale(d.currency);
+       x_position = x_line_scale(d.date);
+       bank_dots[bank.name].tooltip.attr("transform", "translate(" + 
+         x_position + "," + y_position +
+         ")");
+       bank_dots[bank.name].tooltip.select('text').text(d.currency);
+       y_min_position = Math.min(y_min_position, y_position);
+    });
+    focus.select(".focus.line").attr("transform", "translate(" + 
+      x_position + ")").attr("y1", y_min_position);
+  }
 }
 function drawLineGraph(data){
   let svg = d3.select("#lineChart"),
@@ -252,7 +295,7 @@ function drawLineGraph(data){
 
   // use line generator to generate path data.
   let line = d3.line()
-    .curve(d3.curveBasis)
+    //.curve(d3.curveBasis)
     .x(function(d) { 
       return x_line_scale(d.date);
     })
@@ -293,10 +336,6 @@ function drawLineGraph(data){
       return d3.max(c.values, function(d){ return d.currency; });
     })
   ]);
-  //color.domain(banks.map(function(c){
-  //  return c.name;  
-  //n}));
-
   // Create x axis and move to the bottom
   g.append("g")
    .attr("class", "x axis")
@@ -328,15 +367,50 @@ function drawLineGraph(data){
       })
       .style("stroke", function(d) { 
         return color(d.name); // make a color from color scale
-      }).on("mouseover", function(d){
-        var tip = d3.select("#tooltip");
-        tip.style("left", (+d3.event.clientX + 10) + 'px');
-        tip.style("top", (+d3.event.clientY + 10) + 'px'); 
-        tip.select("#bank_name").text(d.name);
-        d3.select("#tooltip").classed("hidden", false);
-      }).on("mouseout", function(d){
-        d3.select("#tooltip").classed("hidden", true);  
-      });
+      }).on("mouseover", () => {
+        focus.style("display", null);  
+      }).on("mouseout", () => {
+        focus.transition().delay(700).style("display", "none");  
+      }).on("mousemove", mousemove);
+
+  let focus = d3.select('.bank')
+                .append("g").attr("class", "focus").style("display", "none");
+  let bank_dots = {};
+  banks.map( bank => {
+    bank_dots[bank.name] = {};
+    bank_dots[bank.name].tooltip = focus.append("g");
+    bank_dots[bank.name].tooltip.append("circle").attr("r", 2);
+    bank_dots[bank.name].tooltip.append("rect").attr("x", 8).attr("y", "-5")
+         .attr("width", 35)
+         .attr("height", '0.75em');
+    bank_dots[bank.name].tooltip.append("text").attr("x", 9).attr("dy", ".35em");     
+  });
+  focus.append("line").attr("class", "focus line").attr("y1", margin.bottom)
+        .attr("y2", height);
+  console.log(height);
+  function mousemove(events) {
+    const mouse_x = x_line_scale.invert(d3.mouse(this)[0])
+    const i = d3.bisector((d, x) => {
+      return new Date(x) - new Date(d.date);
+    }).left(events.values, mouse_x, 1);
+    let x_position = 0;
+    let y_min_position = height + margin.top;
+    banks.map(bank => {   
+       const d0 = bank.values[i-1];
+       const d1 = bank.values[i];
+       const x0 = new Date(mouse_x);
+       const d = x0 > new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
+       const y_position = y_line_scale(d.currency);
+       x_position = x_line_scale(d.date);
+       bank_dots[bank.name].tooltip.attr("transform", "translate(" + 
+         x_position + "," + y_position +
+         ")");
+       bank_dots[bank.name].tooltip.select('text').text(d.currency);
+       y_min_position = Math.min(y_min_position, y_position);
+    });
+    focus.select(".focus.line").attr("transform", "translate(" + 
+      x_position + ")").attr("y1", y_min_position);
+  }
 };
 function drawTableHead(data){
   var rows_data = translateDataForTable(data);
