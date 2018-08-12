@@ -72,7 +72,20 @@ function refreshScatterPlot(data){
      .attr("cy", function(d) {
        return y_scatter_scale(d.currency);
      })
-     .style("fill", function(d) { return color(d.name); });
+     .style("fill", function(d) { return color(d.name); })
+  d3.selectAll('circle')
+    .on('mouseover', tipMouseover)
+    .on('mouseout', tipMouseout);
+  function tipMouseover(d) {
+    d3.select('#scatterTooltip').style('display', null).
+           attr("transform", "translate(" + 
+             d3.mouse(this)[0] + "," + d3.mouse(this)[1] +
+           ")");
+    d3.select('#scatterTooltip').text(d.currency);
+  }
+  function tipMouseout() {
+     d3.select('#scatterTooltip').style('display', 'none');
+  }
   svg.select(".x.axis")
      .call(d3.axisBottom(x_scatter_scale));
   svg.select(".y.axis")
@@ -131,7 +144,23 @@ function drawScatterPlot(data){
             .attr("cy", function(d) {
               return y_scatter_scale(d.currency)
             })
-            .style("fill", function(d) { return color(d.name); });
+            .style("fill", function(d) { return color(d.name); })
+            .on('mouseover', tipMouseover)
+            .on('mouseout', tipMouseout);
+  let tooltip = g.append("text")
+                 .attr('id', 'scatterTooltip')
+                 .attr('class', 'focus text')
+                 .attr("x", 9).attr("dy", ".35em");     
+  function tipMouseover(d) {
+    tooltip.style('display', null).
+           attr("transform", "translate(" + 
+             d3.mouse(this)[0] + "," + d3.mouse(this)[1] +
+           ")");
+    tooltip.text(d.currency);
+  }
+  function tipMouseout() {
+     tooltip.style('display', 'none');
+  }
 }
 function tagColor(data){
   let banks = data.reduce(function(res, obj){
@@ -200,11 +229,7 @@ function refreshLineGraph(data){
       return d3.max(c.values, function(d){ return d.currency; });
     })
   ]);
-  //color.domain(banks.map(function(c){
-  //  return c.name;  
-  //}));
   let line = d3.line()
-    // .curve(d3.curveBasis)
     .x(function(d) { 
       return x_line_scale(d.date);
     })
@@ -224,7 +249,7 @@ function refreshLineGraph(data){
   update_bank.exit().remove()
   let enter_bank = update_bank.enter().append("g")
       .attr("class", "bank");
-  // Render the curve line
+  // Render the line
   enter_bank.append("path")
       .attr("class", "line")
       .attr("d", function(d) { 
@@ -295,7 +320,6 @@ function drawLineGraph(data){
 
   // use line generator to generate path data.
   let line = d3.line()
-    //.curve(d3.curveBasis)
     .x(function(d) { 
       return x_line_scale(d.date);
     })
@@ -359,7 +383,7 @@ function drawLineGraph(data){
   update_bank.exit().remove();
   let enter_bank = update_bank.enter().append("g")
       .attr("class", "bank");
-  // Render the curve line
+  // Render the line
   enter_bank.append("path")
       .attr("class", "line")
       .attr("d", function(d) { 
